@@ -2,14 +2,25 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
 from app.routers import auth, lists, items
+import subprocess
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
+# Run database migrations on startup
+try:
+    subprocess.run(["alembic", "upgrade", "head"], check=True)
+except subprocess.CalledProcessError:
+    # If migrations fail, continue anyway (might be first run)
+    pass
+except FileNotFoundError:
+    # Alembic not available, skip migrations
+    pass
+
 app = FastAPI(
     title="List Handler API",
     description="A FastAPI application for handling lists",
-    version="1.0.0"
+    version="0.1.0"
 )
 
 # Configure CORS

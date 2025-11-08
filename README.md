@@ -17,6 +17,8 @@ pip install -r requirements.txt
 
 ## Running the Application
 
+### Local Development
+
 Start the development server:
 ```bash
 uvicorn main:app --reload
@@ -26,6 +28,50 @@ The API will be available at:
 - API: http://localhost:8000
 - Interactive API docs: http://localhost:8000/docs
 - Alternative API docs: http://localhost:8000/redoc
+
+### Docker
+
+#### Using Docker Compose (Recommended)
+
+1. Build and start the container:
+```bash
+docker-compose up -d
+```
+
+2. View logs:
+```bash
+docker-compose logs -f
+```
+
+3. Stop the container:
+```bash
+docker-compose down
+```
+
+#### Using Docker directly
+
+1. Build the image:
+```bash
+docker build -t list-handler-api .
+```
+
+2. Run the container:
+```bash
+docker run -d \
+  --name list-handler-api \
+  -p 8000:8000 \
+  -v $(pwd)/list_handler.db:/app/list_handler.db \
+  -e SECRET_KEY=your-secret-key-here \
+  list-handler-api
+```
+
+3. Stop the container:
+```bash
+docker stop list-handler-api
+docker rm list-handler-api
+```
+
+**Note:** The database file will be persisted in the current directory when using volumes.
 
 ## Database Setup
 
