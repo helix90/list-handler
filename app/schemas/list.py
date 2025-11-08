@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, List as TypingList
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class ListItemBase(BaseModel):
@@ -18,13 +18,12 @@ class ListItemUpdate(BaseModel):
 
 
 class ListItemResponse(ListItemBase):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int = Field(..., description="Item ID")
     list_id: int = Field(..., description="ID of the list this item belongs to")
     created_at: datetime = Field(..., description="Timestamp when the item was created")
     updated_at: Optional[datetime] = Field(None, description="Timestamp when the item was last updated")
-
-    class Config:
-        from_attributes = True
 
 
 class ListBase(BaseModel):
@@ -42,18 +41,16 @@ class ListUpdate(BaseModel):
 
 
 class ListResponse(ListBase):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int = Field(..., description="List ID")
     user_id: int = Field(..., description="ID of the user who owns this list")
     created_at: datetime = Field(..., description="Timestamp when the list was created")
     updated_at: Optional[datetime] = Field(None, description="Timestamp when the list was last updated")
 
-    class Config:
-        from_attributes = True
-
 
 class ListWithItemsResponse(ListResponse):
+    model_config = ConfigDict(from_attributes=True)
+    
     items: TypingList[ListItemResponse] = Field(default_factory=list, description="Array of items in the list")
-
-    class Config:
-        from_attributes = True
 

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 
 class UserRegister(BaseModel):
@@ -22,13 +22,12 @@ class TokenData(BaseModel):
 
 
 class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int = Field(..., description="User ID")
     username: str = Field(..., description="Username")
     email: str = Field(..., description="Email address")
     is_active: bool = Field(..., description="Whether the user account is active")
-
-    class Config:
-        from_attributes = True
 
 
 class LogoutResponse(BaseModel):
