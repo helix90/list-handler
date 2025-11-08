@@ -7,10 +7,10 @@ services:
     ports:
       - "8088:8088"
     volumes:
-      - ./list_handler.db:/app/list_handler.db
+      - ./data:/app/data
       - ./alembic:/app/alembic
     environment:
-      - DATABASE_URL=sqlite:///./list_handler.db
+      - DATABASE_URL=sqlite:///./data/list_handler.db
       - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-this-in-production}
       - ALGORITHM=HS256
       - ACCESS_TOKEN_EXPIRE_MINUTES=30

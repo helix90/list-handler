@@ -60,7 +60,7 @@ docker build -t list-handler-api .
 docker run -d \
   --name list-handler-api \
   -p 8088:8088 \
-  -v $(pwd)/list_handler.db:/app/list_handler.db \
+  -v $(pwd)/data:/app/data \
   -e SECRET_KEY=your-secret-key-here \
   list-handler-api
 ```
@@ -71,7 +71,7 @@ docker stop list-handler-api
 docker rm list-handler-api
 ```
 
-**Note:** The database file will be persisted in the current directory when using volumes.
+**Note:** The database file will be persisted in the `data/` directory when using volumes.
 
 ## Database Setup
 

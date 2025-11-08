@@ -23,6 +23,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
+# Create data directory for database
+RUN mkdir -p /app/data && chmod 777 /app/data
+
 # Note: Database migrations will run on container startup
 # This allows the database file to be mounted as a volume
 
