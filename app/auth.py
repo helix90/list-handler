@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Optional
+import warnings
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
@@ -8,6 +9,13 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import get_db
 from app.models.user import User
+
+# Suppress passlib crypt deprecation warning (Python 3.13)
+# This warning comes from passlib's internal use of Python's deprecated crypt module
+# We're using bcrypt, not crypt, so this warning doesn't affect our functionality
+# The warning will be resolved when passlib is updated or we migrate to a newer library
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="passlib")
+warnings.filterwarnings("ignore", message=".*crypt.*", category=DeprecationWarning)
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__ident="2b")
