@@ -52,7 +52,7 @@ class ListResponse(ListBase):
 
 
 class ListWithItemsResponse(ListResponse):
-    items: TypingList[ListItemResponse] = []
+    items: TypingList[ListItemResponse] = Field(default_factory=list, description="Array of items in the list")
 
     class Config:
         from_attributes = True
