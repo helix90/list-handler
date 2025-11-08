@@ -21,13 +21,13 @@ pip install -r requirements.txt
 
 Start the development server:
 ```bash
-uvicorn main:app --reload
+uvicorn main:app --reload --port 8088
 ```
 
 The API will be available at:
-- API: http://localhost:8000
-- Interactive API docs: http://localhost:8000/docs
-- Alternative API docs: http://localhost:8000/redoc
+- API: http://localhost:8088
+- Interactive API docs: http://localhost:8088/docs
+- Alternative API docs: http://localhost:8088/redoc
 
 ### Docker
 
@@ -59,7 +59,7 @@ docker build -t list-handler-api .
 ```bash
 docker run -d \
   --name list-handler-api \
-  -p 8000:8000 \
+  -p 8088:8088 \
   -v $(pwd)/list_handler.db:/app/list_handler.db \
   -e SECRET_KEY=your-secret-key-here \
   list-handler-api
