@@ -94,8 +94,236 @@ To rollback a migration:
 alembic downgrade -1
 ```
 
-## Endpoints
+## API Endpoints
+
+### Core Endpoints
 
 - `GET /` - Root endpoint
+  - Returns: `{"message": "Welcome to List Handler API"}`
+  
 - `GET /health` - Health check endpoint
+  - Returns: `{"status": "healthy"}`
+
+### Authentication Endpoints
+
+All authentication endpoints are under `/auth`:
+
+- `POST /auth/register` - Register a new user
+  - **Request Body:**
+    ```json
+    {
+      "username": "string",
+      "email": "email@example.com",
+      "password": "string"
+    }
+    ```
+  - **Response:** `201 Created`
+    ```json
+    {
+      "id": 1,
+      "username": "string",
+      "email": "email@example.com",
+      "is_active": true
+    }
+    ```
+  - **Errors:**
+    - `400 Bad Request` - Username or email already registered
+
+- `POST /auth/login` - Login and get access token
+  - **Request Body:** (form data)
+    - `username`: string
+    - `password`: string
+  - **Response:** `200 OK`
+    ```json
+    {
+      "access_token": "jwt_token_here",
+      "token_type": "bearer"
+    }
+    ```
+  - **Errors:**
+    - `401 Unauthorized` - Incorrect username or password
+    - `400 Bad Request` - User is inactive
+
+- `POST /auth/logout` - Logout current user
+  - **Headers:** `Authorization: Bearer <token>`
+  - **Response:** `200 OK`
+    ```json
+    {
+      "message": "Successfully logged out"
+    }
+    ```
+  - **Errors:**
+    - `401 Unauthorized` - Invalid or missing token
+
+### List Endpoints
+
+All list endpoints are under `/users/{userId}/lists` and require authentication:
+
+- `GET /users/{userId}/lists` - Get all lists for a user
+  - **Headers:** `Authorization: Bearer <token>`
+  - **Response:** `200 OK`
+    ```json
+    [
+      {
+        "id": 1,
+        "user_id": 1,
+        "name": "Shopping List",
+        "description": "My shopping list",
+        "created_at": "2024-01-01T00:00:00",
+        "updated_at": null
+      }
+    ]
+    ```
+  - **Errors:**
+    - `401 Unauthorized` - Missing or invalid token
+    - `403 Forbidden` - User cannot access another user's lists
+
+- `POST /users/{userId}/lists` - Create a new list
+  - **Headers:** `Authorization: Bearer <token>`
+  - **Request Body:**
+    ```json
+    {
+      "name": "string",
+      "description": "string"  // optional
+    }
+    ```
+  - **Response:** `201 Created`
+    ```json
+    {
+      "id": 1,
+      "user_id": 1,
+      "name": "string",
+      "description": "string",
+      "created_at": "2024-01-01T00:00:00",
+      "updated_at": null
+    }
+    ```
+
+- `GET /users/{userId}/lists/{listId}` - Get a specific list with items
+  - **Headers:** `Authorization: Bearer <token>`
+  - **Response:** `200 OK`
+    ```json
+    {
+      "id": 1,
+      "user_id": 1,
+      "name": "Shopping List",
+      "description": "My shopping list",
+      "created_at": "2024-01-01T00:00:00",
+      "updated_at": null,
+      "items": [
+        {
+          "id": 1,
+          "list_id": 1,
+          "content": "Buy milk",
+          "is_completed": 0,
+          "created_at": "2024-01-01T00:00:00",
+          "updated_at": null
+        }
+      ]
+    }
+    ```
+  - **Errors:**
+    - `404 Not Found` - List not found or doesn't belong to user
+
+- `PUT /users/{userId}/lists/{listId}` - Update a list
+  - **Headers:** `Authorization: Bearer <token>`
+  - **Request Body:**
+    ```json
+    {
+      "name": "string",  // optional
+      "description": "string"  // optional
+    }
+    ```
+  - **Response:** `200 OK` - Returns updated list object
+  - **Errors:**
+    - `404 Not Found` - List not found
+
+- `DELETE /users/{userId}/lists/{listId}` - Delete a list
+  - **Headers:** `Authorization: Bearer <token>`
+  - **Response:** `204 No Content`
+  - **Note:** Deleting a list also deletes all its items (cascade delete)
+  - **Errors:**
+    - `404 Not Found` - List not found
+
+### List Item Endpoints
+
+All list item endpoints are under `/users/{userId}/lists/{listId}/items` and require authentication:
+
+- `GET /users/{userId}/lists/{listId}/items` - Get all items in a list
+  - **Headers:** `Authorization: Bearer <token>`
+  - **Response:** `200 OK`
+    ```json
+    [
+      {
+        "id": 1,
+        "list_id": 1,
+        "content": "Buy milk",
+        "is_completed": 0,
+        "created_at": "2024-01-01T00:00:00",
+        "updated_at": null
+      }
+    ]
+    ```
+
+- `POST /users/{userId}/lists/{listId}/items` - Add item to list
+  - **Headers:** `Authorization: Bearer <token>`
+  - **Request Body:**
+    ```json
+    {
+      "content": "string",
+      "is_completed": 0  // optional, defaults to 0 (not completed)
+    }
+    ```
+  - **Response:** `201 Created`
+    ```json
+    {
+      "id": 1,
+      "list_id": 1,
+      "content": "Buy milk",
+      "is_completed": 0,
+      "created_at": "2024-01-01T00:00:00",
+      "updated_at": null
+    }
+    ```
+
+- `PUT /users/{userId}/lists/{listId}/items/{itemId}` - Update an item
+  - **Headers:** `Authorization: Bearer <token>`
+  - **Request Body:**
+    ```json
+    {
+      "content": "string",  // optional
+      "is_completed": 1  // optional (0 = not completed, 1 = completed)
+    }
+    ```
+  - **Response:** `200 OK` - Returns updated item object
+  - **Errors:**
+    - `404 Not Found` - Item not found
+
+- `DELETE /users/{userId}/lists/{listId}/items/{itemId}` - Remove an item
+  - **Headers:** `Authorization: Bearer <token>`
+  - **Response:** `204 No Content`
+  - **Errors:**
+    - `404 Not Found` - Item not found
+
+- `PATCH /users/{userId}/lists/{listId}/items/{itemId}` - Toggle completion status
+  - **Headers:** `Authorization: Bearer <token>`
+  - **Response:** `200 OK` - Returns item with toggled completion status
+    - Toggles `is_completed` between `0` (incomplete) and `1` (completed)
+  - **Errors:**
+    - `404 Not Found` - Item not found
+
+## Authentication
+
+Most endpoints require authentication using JWT Bearer tokens. Include the token in the request header:
+
+```
+Authorization: Bearer <your_access_token>
+```
+
+To get an access token:
+1. Register a new user: `POST /auth/register`
+2. Login: `POST /auth/login` (returns access token)
+3. Use the token in subsequent requests
+
+**Note:** All endpoints that access user-specific resources (lists, items) verify that the authenticated user matches the `userId` in the URL path. Users can only access their own resources.
 
