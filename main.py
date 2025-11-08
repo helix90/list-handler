@@ -19,8 +19,10 @@ except FileNotFoundError:
 
 app = FastAPI(
     title="List Handler API",
-    description="A FastAPI application for handling lists",
-    version="0.1.0"
+    description="A FastAPI application for handling multiple lists with authentication. Users can create lists and manage list items with completion tracking.",
+    version="0.1.0",
+    docs_url="/docs",
+    redoc_url="/redoc"
 )
 
 # Configure CORS
@@ -38,14 +40,36 @@ app.include_router(lists.router)
 app.include_router(items.router)
 
 
-@app.get("/")
+@app.get(
+    "/",
+    summary="Root endpoint",
+    description="Welcome endpoint that returns API information",
+    tags=["core"]
+)
 async def root():
-    """Root endpoint"""
+    """
+    Root endpoint of the API.
+    
+    Returns a welcome message.
+    """
     return {"message": "Welcome to List Handler API"}
 
 
-@app.get("/health")
+@app.get(
+    "/health",
+    summary="Health check",
+    description="Health check endpoint for monitoring and load balancers",
+    tags=["core"],
+    responses={
+        200: {"description": "Service is healthy"}
+    }
+)
 async def health_check():
-    """Health check endpoint"""
+    """
+    Health check endpoint.
+    
+    Used by monitoring systems and load balancers to verify the service is running.
+    Returns a simple status indicator.
+    """
     return {"status": "healthy"}
 

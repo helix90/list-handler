@@ -1,11 +1,11 @@
 from datetime import datetime
 from typing import Optional, List as TypingList
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ListItemBase(BaseModel):
-    content: str
-    is_completed: int = 0
+    content: str = Field(..., description="Content/text of the list item")
+    is_completed: int = Field(default=0, description="Completion status: 0 = not completed, 1 = completed")
 
 
 class ListItemCreate(ListItemBase):
@@ -13,23 +13,23 @@ class ListItemCreate(ListItemBase):
 
 
 class ListItemUpdate(BaseModel):
-    content: Optional[str] = None
-    is_completed: Optional[int] = None
+    content: Optional[str] = Field(None, description="Content/text of the list item")
+    is_completed: Optional[int] = Field(None, description="Completion status: 0 = not completed, 1 = completed")
 
 
 class ListItemResponse(ListItemBase):
-    id: int
-    list_id: int
-    created_at: datetime
-    updated_at: Optional[datetime] = None
+    id: int = Field(..., description="Item ID")
+    list_id: int = Field(..., description="ID of the list this item belongs to")
+    created_at: datetime = Field(..., description="Timestamp when the item was created")
+    updated_at: Optional[datetime] = Field(None, description="Timestamp when the item was last updated")
 
     class Config:
         from_attributes = True
 
 
 class ListBase(BaseModel):
-    name: str
-    description: Optional[str] = None
+    name: str = Field(..., description="Name of the list")
+    description: Optional[str] = Field(None, description="Optional description of the list")
 
 
 class ListCreate(ListBase):
@@ -37,15 +37,15 @@ class ListCreate(ListBase):
 
 
 class ListUpdate(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
+    name: Optional[str] = Field(None, description="Name of the list")
+    description: Optional[str] = Field(None, description="Description of the list")
 
 
 class ListResponse(ListBase):
-    id: int
-    user_id: int
-    created_at: datetime
-    updated_at: Optional[datetime] = None
+    id: int = Field(..., description="List ID")
+    user_id: int = Field(..., description="ID of the user who owns this list")
+    created_at: datetime = Field(..., description="Timestamp when the list was created")
+    updated_at: Optional[datetime] = Field(None, description="Timestamp when the list was last updated")
 
     class Config:
         from_attributes = True

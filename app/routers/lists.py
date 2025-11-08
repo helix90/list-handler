@@ -24,27 +24,57 @@ def verify_user_access(current_user: User, user_id: int):
         )
 
 
-@router.get("", response_model=TypingList[ListResponse])
+@router.get(
+    "",
+    response_model=TypingList[ListResponse],
+    summary="Get all lists for a user",
+    responses={
+        200: {"description": "List of user's lists"},
+        401: {"description": "Missing or invalid authentication token"},
+        403: {"description": "User cannot access another user's lists"}
+    }
+)
 async def get_user_lists(
     user_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Get all lists for a user"""
+    """
+    Retrieve all lists belonging to the specified user.
+    
+    - **user_id**: ID of the user whose lists to retrieve
+    - Returns an array of lists (without items)
+    """
     verify_user_access(current_user, user_id)
     
     lists = db.query(List).filter(List.user_id == user_id).all()
     return lists
 
 
-@router.post("", response_model=ListResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=ListResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new list",
+    responses={
+        201: {"description": "List successfully created"},
+        401: {"description": "Missing or invalid authentication token"},
+        403: {"description": "User cannot create lists for another user"}
+    }
+)
 async def create_list(
     user_id: int,
     list_data: ListCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Create a new list for a user"""
+    """
+    Create a new list for the specified user.
+    
+    - **user_id**: ID of the user who will own the list
+    - **name**: Name of the list (required)
+    - **description**: Optional description of the list
+    """
     verify_user_access(current_user, user_id)
     
     db_list = List(
@@ -59,14 +89,30 @@ async def create_list(
     return db_list
 
 
-@router.get("/{list_id}", response_model=ListWithItemsResponse)
+@router.get(
+    "/{list_id}",
+    response_model=ListWithItemsResponse,
+    summary="Get a specific list with items",
+    responses={
+        200: {"description": "List with all its items"},
+        401: {"description": "Missing or invalid authentication token"},
+        403: {"description": "User cannot access another user's lists"},
+        404: {"description": "List not found or doesn't belong to user"}
+    }
+)
 async def get_list(
     user_id: int,
     list_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Get a specific list with items"""
+    """
+    Retrieve a specific list with all its items.
+    
+    - **user_id**: ID of the user who owns the list
+    - **list_id**: ID of the list to retrieve
+    - Returns the list object with an array of all items
+    """
     verify_user_access(current_user, user_id)
     
     db_list = db.query(List).filter(
@@ -83,7 +129,17 @@ async def get_list(
     return db_list
 
 
-@router.put("/{list_id}", response_model=ListResponse)
+@router.put(
+    "/{list_id}",
+    response_model=ListResponse,
+    summary="Update a list",
+    responses={
+        200: {"description": "List successfully updated"},
+        401: {"description": "Missing or invalid authentication token"},
+        403: {"description": "User cannot update another user's lists"},
+        404: {"description": "List not found"}
+    }
+)
 async def update_list(
     user_id: int,
     list_id: int,
@@ -91,7 +147,15 @@ async def update_list(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Update a list (rename, description, etc)"""
+    """
+    Update a list's name and/or description.
+    
+    - **user_id**: ID of the user who owns the list
+    - **list_id**: ID of the list to update
+    - **name**: New name for the list (optional)
+    - **description**: New description for the list (optional)
+    - Only provided fields will be updated
+    """
     verify_user_access(current_user, user_id)
     
     db_list = db.query(List).filter(
@@ -117,14 +181,30 @@ async def update_list(
     return db_list
 
 
-@router.delete("/{list_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{list_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a list",
+    responses={
+        204: {"description": "List successfully deleted"},
+        401: {"description": "Missing or invalid authentication token"},
+        403: {"description": "User cannot delete another user's lists"},
+        404: {"description": "List not found"}
+    }
+)
 async def delete_list(
     user_id: int,
     list_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Delete a list"""
+    """
+    Delete a list and all its items.
+    
+    - **user_id**: ID of the user who owns the list
+    - **list_id**: ID of the list to delete
+    - **Warning**: This will also delete all items in the list (cascade delete)
+    """
     verify_user_access(current_user, user_id)
     
     db_list = db.query(List).filter(

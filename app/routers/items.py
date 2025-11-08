@@ -32,21 +32,48 @@ def verify_list_access(current_user: User, user_id: int, list_id: int, db: Sessi
     return db_list
 
 
-@router.get("", response_model=TypingList[ListItemResponse])
+@router.get(
+    "",
+    response_model=TypingList[ListItemResponse],
+    summary="Get all items in a list",
+    responses={
+        200: {"description": "Array of list items"},
+        401: {"description": "Missing or invalid authentication token"},
+        403: {"description": "User cannot access another user's lists"},
+        404: {"description": "List not found"}
+    }
+)
 async def get_list_items(
     user_id: int,
     list_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Get all items in a list"""
+    """
+    Retrieve all items in a specific list.
+    
+    - **user_id**: ID of the user who owns the list
+    - **list_id**: ID of the list
+    - Returns an array of all items in the list
+    """
     verify_list_access(current_user, user_id, list_id, db)
     
     items = db.query(ListItem).filter(ListItem.list_id == list_id).all()
     return items
 
 
-@router.post("", response_model=ListItemResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=ListItemResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Add item to list",
+    responses={
+        201: {"description": "Item successfully created"},
+        401: {"description": "Missing or invalid authentication token"},
+        403: {"description": "User cannot add items to another user's lists"},
+        404: {"description": "List not found"}
+    }
+)
 async def create_list_item(
     user_id: int,
     list_id: int,
@@ -54,7 +81,14 @@ async def create_list_item(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Add item to list"""
+    """
+    Add a new item to a list.
+    
+    - **user_id**: ID of the user who owns the list
+    - **list_id**: ID of the list to add the item to
+    - **content**: Text content of the item (required)
+    - **is_completed**: Completion status, defaults to 0 (not completed)
+    """
     verify_list_access(current_user, user_id, list_id, db)
     
     db_item = ListItem(
@@ -69,7 +103,17 @@ async def create_list_item(
     return db_item
 
 
-@router.put("/{item_id}", response_model=ListItemResponse)
+@router.put(
+    "/{item_id}",
+    response_model=ListItemResponse,
+    summary="Update an item",
+    responses={
+        200: {"description": "Item successfully updated"},
+        401: {"description": "Missing or invalid authentication token"},
+        403: {"description": "User cannot update items in another user's lists"},
+        404: {"description": "Item not found"}
+    }
+)
 async def update_list_item(
     user_id: int,
     list_id: int,
@@ -78,7 +122,16 @@ async def update_list_item(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Update an item"""
+    """
+    Update an item's content and/or completion status.
+    
+    - **user_id**: ID of the user who owns the list
+    - **list_id**: ID of the list containing the item
+    - **item_id**: ID of the item to update
+    - **content**: New content for the item (optional)
+    - **is_completed**: New completion status (optional: 0 = not completed, 1 = completed)
+    - Only provided fields will be updated
+    """
     verify_list_access(current_user, user_id, list_id, db)
     
     db_item = db.query(ListItem).filter(
@@ -104,7 +157,17 @@ async def update_list_item(
     return db_item
 
 
-@router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{item_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Remove an item",
+    responses={
+        204: {"description": "Item successfully deleted"},
+        401: {"description": "Missing or invalid authentication token"},
+        403: {"description": "User cannot delete items from another user's lists"},
+        404: {"description": "Item not found"}
+    }
+)
 async def delete_list_item(
     user_id: int,
     list_id: int,
@@ -112,7 +175,13 @@ async def delete_list_item(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Remove an item"""
+    """
+    Delete an item from a list.
+    
+    - **user_id**: ID of the user who owns the list
+    - **list_id**: ID of the list containing the item
+    - **item_id**: ID of the item to delete
+    """
     verify_list_access(current_user, user_id, list_id, db)
     
     db_item = db.query(ListItem).filter(
@@ -132,7 +201,17 @@ async def delete_list_item(
     return None
 
 
-@router.patch("/{item_id}", response_model=ListItemResponse)
+@router.patch(
+    "/{item_id}",
+    response_model=ListItemResponse,
+    summary="Toggle item completion status",
+    responses={
+        200: {"description": "Item completion status toggled"},
+        401: {"description": "Missing or invalid authentication token"},
+        403: {"description": "User cannot modify items in another user's lists"},
+        404: {"description": "Item not found"}
+    }
+)
 async def toggle_item_completion(
     user_id: int,
     list_id: int,
@@ -140,7 +219,15 @@ async def toggle_item_completion(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Toggle completion status of an item"""
+    """
+    Toggle the completion status of an item.
+    
+    - **user_id**: ID of the user who owns the list
+    - **list_id**: ID of the list containing the item
+    - **item_id**: ID of the item to toggle
+    - Toggles `is_completed` between 0 (incomplete) and 1 (completed)
+    - No request body required
+    """
     verify_list_access(current_user, user_id, list_id, db)
     
     db_item = db.query(ListItem).filter(
