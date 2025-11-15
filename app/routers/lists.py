@@ -71,7 +71,7 @@ async def create_list(
 
 
 @router.get(
-    "/{list_id}",
+    "/{list_name}",
     response_model=ListWithItemsResponse,
     summary="Get a specific list with items",
     responses={
@@ -81,19 +81,19 @@ async def create_list(
     }
 )
 async def get_list(
-    list_id: int,
+    list_name: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Retrieve a specific list with all its items.
     
-    - **list_id**: ID of the list to retrieve
+    - **list_name**: Name of the list to retrieve
     - Returns the list object with an array of all items
     - Only returns lists owned by the current authenticated user
     """
     db_list = db.query(List).filter(
-        List.id == list_id,
+        List.name == list_name,
         List.user_id == current_user.id
     ).first()
     
@@ -107,7 +107,7 @@ async def get_list(
 
 
 @router.put(
-    "/{list_id}",
+    "/{list_name}",
     response_model=ListResponse,
     summary="Update a list",
     responses={
@@ -117,7 +117,7 @@ async def get_list(
     }
 )
 async def update_list(
-    list_id: int,
+    list_name: str,
     list_data: ListUpdate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -125,14 +125,14 @@ async def update_list(
     """
     Update a list's name and/or description.
     
-    - **list_id**: ID of the list to update
+    - **list_name**: Name of the list to update
     - **name**: New name for the list (optional)
     - **description**: New description for the list (optional)
     - Only provided fields will be updated
     - Only updates lists owned by the current authenticated user
     """
     db_list = db.query(List).filter(
-        List.id == list_id,
+        List.name == list_name,
         List.user_id == current_user.id
     ).first()
     
@@ -155,7 +155,7 @@ async def update_list(
 
 
 @router.delete(
-    "/{list_id}",
+    "/{list_name}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a list",
     responses={
@@ -165,19 +165,19 @@ async def update_list(
     }
 )
 async def delete_list(
-    list_id: int,
+    list_name: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Delete a list and all its items.
     
-    - **list_id**: ID of the list to delete
+    - **list_name**: Name of the list to delete
     - **Warning**: This will also delete all items in the list (cascade delete)
     - Only deletes lists owned by the current authenticated user
     """
     db_list = db.query(List).filter(
-        List.id == list_id,
+        List.name == list_name,
         List.user_id == current_user.id
     ).first()
     

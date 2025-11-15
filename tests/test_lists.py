@@ -1,5 +1,6 @@
 import pytest
 from fastapi import status
+from urllib.parse import quote
 
 
 class TestGetUserLists:
@@ -86,7 +87,7 @@ class TestGetList:
     def test_get_list_success(self, client, auth_headers, test_user, test_list):
         """Test getting a specific list with items"""
         response = client.get(
-            f"/users/me/lists/{test_list.id}",
+            f"/users/me/lists/{quote(test_list.name)}",
             headers=auth_headers
         )
         
@@ -100,7 +101,7 @@ class TestGetList:
     def test_get_list_not_found(self, client, auth_headers, test_user):
         """Test getting a nonexistent list"""
         response = client.get(
-            "/users/me/lists/99999",
+            "/users/me/lists/Nonexistent%20List",
             headers=auth_headers
         )
         
@@ -119,7 +120,7 @@ class TestGetList:
         db_session.refresh(other_list)
         
         response = client.get(
-            f"/users/me/lists/{other_list.id}",
+            f"/users/me/lists/{quote(other_list.name)}",
             headers=auth_headers
         )
         
@@ -132,7 +133,7 @@ class TestUpdateList:
     def test_update_list_success(self, client, auth_headers, test_user, test_list):
         """Test updating a list"""
         response = client.put(
-            f"/users/me/lists/{test_list.id}",
+            f"/users/me/lists/{quote(test_list.name)}",
             headers=auth_headers,
             json={
                 "name": "Updated List Name",
@@ -148,7 +149,7 @@ class TestUpdateList:
     def test_update_list_partial(self, client, auth_headers, test_user, test_list):
         """Test updating only name"""
         response = client.put(
-            f"/users/me/lists/{test_list.id}",
+            f"/users/me/lists/{quote(test_list.name)}",
             headers=auth_headers,
             json={"name": "New Name Only"}
         )
@@ -162,7 +163,7 @@ class TestUpdateList:
     def test_update_list_not_found(self, client, auth_headers, test_user):
         """Test updating a nonexistent list"""
         response = client.put(
-            "/users/me/lists/99999",
+            "/users/me/lists/Nonexistent%20List",
             headers=auth_headers,
             json={"name": "Updated Name"}
         )
@@ -186,7 +187,7 @@ class TestDeleteList:
         db_session.refresh(list_to_delete)
         
         response = client.delete(
-            f"/users/me/lists/{list_to_delete.id}",
+            f"/users/me/lists/{quote(list_to_delete.name)}",
             headers=auth_headers
         )
         
@@ -194,7 +195,7 @@ class TestDeleteList:
         
         # Verify list is deleted
         response = client.get(
-            f"/users/me/lists/{list_to_delete.id}",
+            f"/users/me/lists/{quote(list_to_delete.name)}",
             headers=auth_headers
         )
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -202,7 +203,7 @@ class TestDeleteList:
     def test_delete_list_not_found(self, client, auth_headers, test_user):
         """Test deleting a nonexistent list"""
         response = client.delete(
-            "/users/me/lists/99999",
+            "/users/me/lists/Nonexistent%20List",
             headers=auth_headers
         )
         
@@ -213,7 +214,7 @@ class TestDeleteList:
         item_id = test_list_item.id
         
         response = client.delete(
-            f"/users/me/lists/{test_list.id}",
+            f"/users/me/lists/{quote(test_list.name)}",
             headers=auth_headers
         )
         

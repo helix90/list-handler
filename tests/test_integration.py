@@ -134,11 +134,10 @@ class TestAuthenticationIntegration:
             json={"name": "CRUD Test List", "description": "Testing CRUD"}
         )
         assert create_response.status_code == status.HTTP_201_CREATED
-        list_id = create_response.json()["id"]
         
         # Step 3: Read the specific list
         get_response = client.get(
-            f"/users/me/lists/{list_id}",
+            f"/users/me/lists/{quote('CRUD Test List')}",
             headers=headers
         )
         assert get_response.status_code == status.HTTP_200_OK
@@ -146,7 +145,7 @@ class TestAuthenticationIntegration:
         
         # Step 4: Update the list
         update_response = client.put(
-            f"/users/me/lists/{list_id}",
+            f"/users/me/lists/{quote('CRUD Test List')}",
             headers=headers,
             json={"name": "Updated CRUD List", "description": "Updated"}
         )
@@ -155,14 +154,14 @@ class TestAuthenticationIntegration:
         
         # Step 5: Delete the list
         delete_response = client.delete(
-            f"/users/me/lists/{list_id}",
+            f"/users/me/lists/{quote('Updated CRUD List')}",
             headers=headers
         )
         assert delete_response.status_code == status.HTTP_204_NO_CONTENT
         
         # Step 6: Verify it's deleted
         verify_response = client.get(
-            f"/users/me/lists/{list_id}",
+            f"/users/me/lists/{quote('Updated CRUD List')}",
             headers=headers
         )
         assert verify_response.status_code == status.HTTP_404_NOT_FOUND
@@ -202,11 +201,11 @@ class TestAuthenticationEdgeCases:
         )
         assert post_response.status_code == status.HTTP_201_CREATED, \
             f"POST request failed with token: {post_response.status_code}, detail: {post_response.json()}"
-        list_id = post_response.json()["id"]
+        list_name = post_response.json()["name"]
         
         # Test PUT request
         put_response = client.put(
-            f"/users/me/lists/{list_id}",
+            f"/users/me/lists/{quote(list_name)}",
             headers=headers,
             json={"name": "Updated Name"}
         )
@@ -215,7 +214,7 @@ class TestAuthenticationEdgeCases:
         
         # Test DELETE request
         delete_response = client.delete(
-            f"/users/me/lists/{list_id}",
+            f"/users/me/lists/{quote('Updated Name')}",
             headers=headers
         )
         assert delete_response.status_code == status.HTTP_204_NO_CONTENT, \

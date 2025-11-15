@@ -208,8 +208,9 @@ All list endpoints are under `/users/me/` and require authentication. The `/me` 
     }
     ```
 
-- `GET /users/me/lists/{listId}` - Get a specific list with items
+- `GET /users/me/lists/{listName}` - Get a specific list with items
   - **Headers:** `Authorization: Bearer <token>`
+  - **Path Parameter:** `listName` - Name of the list (URL-encoded if it contains spaces or special characters)
   - **Response:** `200 OK`
     ```json
     {
@@ -234,8 +235,9 @@ All list endpoints are under `/users/me/` and require authentication. The `/me` 
   - **Errors:**
     - `404 Not Found` - List not found or doesn't belong to user
 
-- `PUT /users/me/lists/{listId}` - Update a list
+- `PUT /users/me/lists/{listName}` - Update a list
   - **Headers:** `Authorization: Bearer <token>`
+  - **Path Parameter:** `listName` - Name of the list (URL-encoded if it contains spaces or special characters)
   - **Request Body:**
     ```json
     {
@@ -247,8 +249,9 @@ All list endpoints are under `/users/me/` and require authentication. The `/me` 
   - **Errors:**
     - `404 Not Found` - List not found
 
-- `DELETE /users/me/lists/{listId}` - Delete a list
+- `DELETE /users/me/lists/{listName}` - Delete a list
   - **Headers:** `Authorization: Bearer <token>`
+  - **Path Parameter:** `listName` - Name of the list (URL-encoded if it contains spaces or special characters)
   - **Response:** `204 No Content`
   - **Note:** Deleting a list also deletes all its items (cascade delete)
   - **Errors:**
@@ -256,9 +259,9 @@ All list endpoints are under `/users/me/` and require authentication. The `/me` 
 
 ### List Item Endpoints
 
-All list item endpoints are under `/users/me/lists/{listId}/items` and require authentication:
+All list item endpoints are under `/users/me/lists/{listName}/items` and require authentication:
 
-- `GET /users/me/lists/{listId}/items` - Get all items in a list
+- `GET /users/me/lists/{listName}/items` - Get all items in a list
   - **Headers:** `Authorization: Bearer <token>`
   - **Response:** `200 OK`
     ```json
@@ -274,8 +277,9 @@ All list item endpoints are under `/users/me/lists/{listId}/items` and require a
     ]
     ```
 
-- `POST /users/me/lists/{listId}/items` - Add item to list
+- `POST /users/me/lists/{listName}/items` - Add item to list
   - **Headers:** `Authorization: Bearer <token>`
+  - **Path Parameter:** `listName` - Name of the list (URL-encoded if it contains spaces or special characters)
   - **Request Body:**
     ```json
     {
@@ -295,8 +299,11 @@ All list item endpoints are under `/users/me/lists/{listId}/items` and require a
     }
     ```
 
-- `PUT /users/me/lists/{listId}/items/{itemId}` - Update an item
+- `PUT /users/me/lists/{listName}/items/{itemId}` - Update an item
   - **Headers:** `Authorization: Bearer <token>`
+  - **Path Parameters:** 
+    - `listName` - Name of the list (URL-encoded if it contains spaces or special characters)
+    - `itemId` - ID of the item to update
   - **Request Body:**
     ```json
     {
@@ -308,14 +315,20 @@ All list item endpoints are under `/users/me/lists/{listId}/items` and require a
   - **Errors:**
     - `404 Not Found` - Item not found
 
-- `DELETE /users/me/lists/{listId}/items/{itemId}` - Remove an item
+- `DELETE /users/me/lists/{listName}/items/{itemId}` - Remove an item
   - **Headers:** `Authorization: Bearer <token>`
+  - **Path Parameters:** 
+    - `listName` - Name of the list (URL-encoded if it contains spaces or special characters)
+    - `itemId` - ID of the item to delete
   - **Response:** `204 No Content`
   - **Errors:**
     - `404 Not Found` - Item not found
 
-- `PATCH /users/me/lists/{listId}/items/{itemId}` - Toggle completion status
+- `PATCH /users/me/lists/{listName}/items/{itemId}` - Toggle completion status
   - **Headers:** `Authorization: Bearer <token>`
+  - **Path Parameters:** 
+    - `listName` - Name of the list (URL-encoded if it contains spaces or special characters)
+    - `itemId` - ID of the item to toggle
   - **Response:** `200 OK` - Returns item with toggled completion status
     - Toggles `is_completed` between `0` (incomplete) and `1` (completed)
   - **Errors:**

@@ -20,7 +20,7 @@ except FileNotFoundError:
 app = FastAPI(
     title="List Handler API",
     description="A FastAPI application for handling multiple lists with authentication. Users can create lists and manage list items with completion tracking.",
-    version="0.1.0",
+    version="0.3.0",
     docs_url="/docs",
     redoc_url="/redoc"
 )
