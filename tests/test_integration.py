@@ -1,5 +1,6 @@
 import pytest
 from fastapi import status
+from urllib.parse import quote
 
 
 class TestAuthenticationIntegration:
@@ -74,7 +75,7 @@ class TestAuthenticationIntegration:
         
         # Step 2: Create an item
         create_response = client.post(
-            f"/users/me/lists/{test_list.id}/items",
+            f"/users/me/lists/{quote(test_list.name)}/items",
             headers=headers,
             json={"content": "Integration Test Item"}
         )
@@ -83,14 +84,14 @@ class TestAuthenticationIntegration:
         
         # Step 3: Read items
         get_response = client.get(
-            f"/users/me/lists/{test_list.id}/items",
+            f"/users/me/lists/{quote(test_list.name)}/items",
             headers=headers
         )
         assert get_response.status_code == status.HTTP_200_OK
         
         # Step 4: Update the item
         update_response = client.put(
-            f"/users/me/lists/{test_list.id}/items/{item_id}",
+            f"/users/me/lists/{quote(test_list.name)}/items/{item_id}",
             headers=headers,
             json={"content": "Updated Content", "is_completed": 1}
         )
@@ -98,14 +99,14 @@ class TestAuthenticationIntegration:
         
         # Step 5: Toggle completion
         toggle_response = client.patch(
-            f"/users/me/lists/{test_list.id}/items/{item_id}",
+            f"/users/me/lists/{quote(test_list.name)}/items/{item_id}",
             headers=headers
         )
         assert toggle_response.status_code == status.HTTP_200_OK
         
         # Step 6: Delete the item
         delete_response = client.delete(
-            f"/users/me/lists/{test_list.id}/items/{item_id}",
+            f"/users/me/lists/{quote(test_list.name)}/items/{item_id}",
             headers=headers
         )
         assert delete_response.status_code == status.HTTP_204_NO_CONTENT

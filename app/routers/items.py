@@ -7,13 +7,13 @@ from app.models.list import List, ListItem
 from app.schemas.list import ListItemCreate, ListItemUpdate, ListItemResponse
 from app.auth import get_current_user
 
-router = APIRouter(prefix="/users/me/lists/{list_id}/items", tags=["list-items"])
+router = APIRouter(prefix="/users/me/lists/{list_name}/items", tags=["list-items"])
 
 
-def verify_list_access(current_user: User, list_id: int, db: Session):
+def verify_list_access(current_user: User, list_name: str, db: Session):
     """Verify that the current user owns the requested list"""
     db_list = db.query(List).filter(
-        List.id == list_id,
+        List.name == list_name,
         List.user_id == current_user.id
     ).first()
     
@@ -37,19 +37,19 @@ def verify_list_access(current_user: User, list_id: int, db: Session):
     }
 )
 async def get_list_items(
-    list_id: int,
+    list_name: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Retrieve all items in a specific list.
     
-    - **list_id**: ID of the list
+    - **list_name**: Name of the list
     - Returns an array of all items in the list owned by current user
     """
-    verify_list_access(current_user, list_id, db)
+    db_list = verify_list_access(current_user, list_name, db)
     
-    items = db.query(ListItem).filter(ListItem.list_id == list_id).all()
+    items = db.query(ListItem).filter(ListItem.list_id == db_list.id).all()
     return items
 
 
@@ -65,7 +65,7 @@ async def get_list_items(
     }
 )
 async def create_list_item(
-    list_id: int,
+    list_name: str,
     item_data: ListItemCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -73,14 +73,14 @@ async def create_list_item(
     """
     Add a new item to a list owned by current user.
     
-    - **list_id**: ID of the list to add the item to
+    - **list_name**: Name of the list to add the item to
     - **content**: Text content of the item (required)
     - **is_completed**: Completion status, defaults to 0 (not completed)
     """
-    verify_list_access(current_user, list_id, db)
+    db_list = verify_list_access(current_user, list_name, db)
     
     db_item = ListItem(
-        list_id=list_id,
+        list_id=db_list.id,
         content=item_data.content,
         is_completed=item_data.is_completed
     )
@@ -102,7 +102,7 @@ async def create_list_item(
     }
 )
 async def update_list_item(
-    list_id: int,
+    list_name: str,
     item_id: int,
     item_data: ListItemUpdate,
     current_user: User = Depends(get_current_user),
@@ -111,18 +111,18 @@ async def update_list_item(
     """
     Update an item's content and/or completion status.
     
-    - **list_id**: ID of the list containing the item
+    - **list_name**: Name of the list containing the item
     - **item_id**: ID of the item to update
     - **content**: New content for the item (optional)
     - **is_completed**: New completion status (optional: 0 = not completed, 1 = completed)
     - Only provided fields will be updated
     - Only updates items in lists owned by current user
     """
-    verify_list_access(current_user, list_id, db)
+    db_list = verify_list_access(current_user, list_name, db)
     
     db_item = db.query(ListItem).filter(
         ListItem.id == item_id,
-        ListItem.list_id == list_id
+        ListItem.list_id == db_list.id
     ).first()
     
     if not db_item:
@@ -154,7 +154,7 @@ async def update_list_item(
     }
 )
 async def delete_list_item(
-    list_id: int,
+    list_name: str,
     item_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -162,15 +162,15 @@ async def delete_list_item(
     """
     Delete an item from a list.
     
-    - **list_id**: ID of the list containing the item
+    - **list_name**: Name of the list containing the item
     - **item_id**: ID of the item to delete
     - Only deletes items from lists owned by current user
     """
-    verify_list_access(current_user, list_id, db)
+    db_list = verify_list_access(current_user, list_name, db)
     
     db_item = db.query(ListItem).filter(
         ListItem.id == item_id,
-        ListItem.list_id == list_id
+        ListItem.list_id == db_list.id
     ).first()
     
     if not db_item:
@@ -196,7 +196,7 @@ async def delete_list_item(
     }
 )
 async def toggle_item_completion(
-    list_id: int,
+    list_name: str,
     item_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -204,17 +204,17 @@ async def toggle_item_completion(
     """
     Toggle the completion status of an item.
     
-    - **list_id**: ID of the list containing the item
+    - **list_name**: Name of the list containing the item
     - **item_id**: ID of the item to toggle
     - Toggles `is_completed` between 0 (incomplete) and 1 (completed)
     - No request body required
     - Only toggles items in lists owned by current user
     """
-    verify_list_access(current_user, list_id, db)
+    db_list = verify_list_access(current_user, list_name, db)
     
     db_item = db.query(ListItem).filter(
         ListItem.id == item_id,
-        ListItem.list_id == list_id
+        ListItem.list_id == db_list.id
     ).first()
     
     if not db_item:
