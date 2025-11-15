@@ -8,7 +8,7 @@ class TestGetUserLists:
     def test_get_lists_success(self, client, auth_headers, test_user, test_list):
         """Test getting all lists for a user"""
         response = client.get(
-            f"/users/{test_user.id}/lists",
+            "/users/me/lists",
             headers=auth_headers
         )
         
@@ -20,18 +20,19 @@ class TestGetUserLists:
     
     def test_get_lists_unauthorized(self, client, test_user, test_list):
         """Test getting lists without authentication"""
-        response = client.get(f"/users/{test_user.id}/lists")
+        response = client.get("/users/me/lists")
         
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
     
-    def test_get_lists_wrong_user(self, client, auth_headers, test_user2):
-        """Test getting lists for another user"""
+    def test_get_lists_empty(self, client, auth_headers):
+        """Test getting lists when user has no lists"""
         response = client.get(
-            f"/users/{test_user2.id}/lists",
+            "/users/me/lists",
             headers=auth_headers
         )
         
-        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == []
 
 
 class TestCreateList:
@@ -40,7 +41,7 @@ class TestCreateList:
     def test_create_list_success(self, client, auth_headers, test_user):
         """Test creating a list"""
         response = client.post(
-            f"/users/{test_user.id}/lists",
+            "/users/me/lists",
             headers=auth_headers,
             json={
                 "name": "New List",
@@ -58,7 +59,7 @@ class TestCreateList:
     def test_create_list_minimal(self, client, auth_headers, test_user):
         """Test creating a list with only name"""
         response = client.post(
-            f"/users/{test_user.id}/lists",
+            "/users/me/lists",
             headers=auth_headers,
             json={"name": "Minimal List"}
         )
@@ -71,21 +72,12 @@ class TestCreateList:
     def test_create_list_unauthorized(self, client, test_user):
         """Test creating a list without authentication"""
         response = client.post(
-            f"/users/{test_user.id}/lists",
+            "/users/me/lists",
             json={"name": "New List"}
         )
         
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
     
-    def test_create_list_wrong_user(self, client, auth_headers, test_user2):
-        """Test creating a list for another user"""
-        response = client.post(
-            f"/users/{test_user2.id}/lists",
-            headers=auth_headers,
-            json={"name": "New List"}
-        )
-        
-        assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 class TestGetList:
@@ -94,7 +86,7 @@ class TestGetList:
     def test_get_list_success(self, client, auth_headers, test_user, test_list):
         """Test getting a specific list with items"""
         response = client.get(
-            f"/users/{test_user.id}/lists/{test_list.id}",
+            f"/users/me/lists/{test_list.id}",
             headers=auth_headers
         )
         
@@ -108,7 +100,7 @@ class TestGetList:
     def test_get_list_not_found(self, client, auth_headers, test_user):
         """Test getting a nonexistent list"""
         response = client.get(
-            f"/users/{test_user.id}/lists/99999",
+            "/users/me/lists/99999",
             headers=auth_headers
         )
         
@@ -127,7 +119,7 @@ class TestGetList:
         db_session.refresh(other_list)
         
         response = client.get(
-            f"/users/{test_user.id}/lists/{other_list.id}",
+            f"/users/me/lists/{other_list.id}",
             headers=auth_headers
         )
         
@@ -140,7 +132,7 @@ class TestUpdateList:
     def test_update_list_success(self, client, auth_headers, test_user, test_list):
         """Test updating a list"""
         response = client.put(
-            f"/users/{test_user.id}/lists/{test_list.id}",
+            f"/users/me/lists/{test_list.id}",
             headers=auth_headers,
             json={
                 "name": "Updated List Name",
@@ -156,7 +148,7 @@ class TestUpdateList:
     def test_update_list_partial(self, client, auth_headers, test_user, test_list):
         """Test updating only name"""
         response = client.put(
-            f"/users/{test_user.id}/lists/{test_list.id}",
+            f"/users/me/lists/{test_list.id}",
             headers=auth_headers,
             json={"name": "New Name Only"}
         )
@@ -170,7 +162,7 @@ class TestUpdateList:
     def test_update_list_not_found(self, client, auth_headers, test_user):
         """Test updating a nonexistent list"""
         response = client.put(
-            f"/users/{test_user.id}/lists/99999",
+            "/users/me/lists/99999",
             headers=auth_headers,
             json={"name": "Updated Name"}
         )
@@ -194,7 +186,7 @@ class TestDeleteList:
         db_session.refresh(list_to_delete)
         
         response = client.delete(
-            f"/users/{test_user.id}/lists/{list_to_delete.id}",
+            f"/users/me/lists/{list_to_delete.id}",
             headers=auth_headers
         )
         
@@ -202,7 +194,7 @@ class TestDeleteList:
         
         # Verify list is deleted
         response = client.get(
-            f"/users/{test_user.id}/lists/{list_to_delete.id}",
+            f"/users/me/lists/{list_to_delete.id}",
             headers=auth_headers
         )
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -210,7 +202,7 @@ class TestDeleteList:
     def test_delete_list_not_found(self, client, auth_headers, test_user):
         """Test deleting a nonexistent list"""
         response = client.delete(
-            f"/users/{test_user.id}/lists/99999",
+            "/users/me/lists/99999",
             headers=auth_headers
         )
         
@@ -221,7 +213,7 @@ class TestDeleteList:
         item_id = test_list_item.id
         
         response = client.delete(
-            f"/users/{test_user.id}/lists/{test_list.id}",
+            f"/users/me/lists/{test_list.id}",
             headers=auth_headers
         )
         

@@ -96,6 +96,16 @@ alembic downgrade -1
 
 ## API Endpoints
 
+### API Design
+
+This API uses the `/users/me/` pattern for all user-specific endpoints. The `me` placeholder automatically refers to the currently authenticated user based on the JWT token. This design:
+
+- **Eliminates the need to know your user ID** - You only need the JWT token from login
+- **Increases security** - Users cannot accidentally or maliciously access other users' resources
+- **Simplifies client code** - No need to extract and store the user ID after login
+
+Example: After logging in, you access your lists at `/users/me/lists` instead of `/users/123/lists`.
+
 ### Core Endpoints
 
 - `GET /` - Root endpoint
@@ -157,9 +167,9 @@ All authentication endpoints are under `/auth`:
 
 ### List Endpoints
 
-All list endpoints are under `/users/{userId}/lists` and require authentication:
+All list endpoints are under `/users/me/` and require authentication. The `/me` placeholder automatically refers to the currently authenticated user:
 
-- `GET /users/{userId}/lists` - Get all lists for a user
+- `GET /users/me/lists` - Get all lists for a user
   - **Headers:** `Authorization: Bearer <token>`
   - **Response:** `200 OK`
     ```json
@@ -176,9 +186,8 @@ All list endpoints are under `/users/{userId}/lists` and require authentication:
     ```
   - **Errors:**
     - `401 Unauthorized` - Missing or invalid token
-    - `403 Forbidden` - User cannot access another user's lists
 
-- `POST /users/{userId}/lists` - Create a new list
+- `POST /users/me/lists` - Create a new list
   - **Headers:** `Authorization: Bearer <token>`
   - **Request Body:**
     ```json
@@ -199,7 +208,7 @@ All list endpoints are under `/users/{userId}/lists` and require authentication:
     }
     ```
 
-- `GET /users/{userId}/lists/{listId}` - Get a specific list with items
+- `GET /users/me/lists/{listId}` - Get a specific list with items
   - **Headers:** `Authorization: Bearer <token>`
   - **Response:** `200 OK`
     ```json
@@ -225,7 +234,7 @@ All list endpoints are under `/users/{userId}/lists` and require authentication:
   - **Errors:**
     - `404 Not Found` - List not found or doesn't belong to user
 
-- `PUT /users/{userId}/lists/{listId}` - Update a list
+- `PUT /users/me/lists/{listId}` - Update a list
   - **Headers:** `Authorization: Bearer <token>`
   - **Request Body:**
     ```json
@@ -238,7 +247,7 @@ All list endpoints are under `/users/{userId}/lists` and require authentication:
   - **Errors:**
     - `404 Not Found` - List not found
 
-- `DELETE /users/{userId}/lists/{listId}` - Delete a list
+- `DELETE /users/me/lists/{listId}` - Delete a list
   - **Headers:** `Authorization: Bearer <token>`
   - **Response:** `204 No Content`
   - **Note:** Deleting a list also deletes all its items (cascade delete)
@@ -247,9 +256,9 @@ All list endpoints are under `/users/{userId}/lists` and require authentication:
 
 ### List Item Endpoints
 
-All list item endpoints are under `/users/{userId}/lists/{listId}/items` and require authentication:
+All list item endpoints are under `/users/me/lists/{listId}/items` and require authentication:
 
-- `GET /users/{userId}/lists/{listId}/items` - Get all items in a list
+- `GET /users/me/lists/{listId}/items` - Get all items in a list
   - **Headers:** `Authorization: Bearer <token>`
   - **Response:** `200 OK`
     ```json
@@ -265,7 +274,7 @@ All list item endpoints are under `/users/{userId}/lists/{listId}/items` and req
     ]
     ```
 
-- `POST /users/{userId}/lists/{listId}/items` - Add item to list
+- `POST /users/me/lists/{listId}/items` - Add item to list
   - **Headers:** `Authorization: Bearer <token>`
   - **Request Body:**
     ```json
@@ -286,7 +295,7 @@ All list item endpoints are under `/users/{userId}/lists/{listId}/items` and req
     }
     ```
 
-- `PUT /users/{userId}/lists/{listId}/items/{itemId}` - Update an item
+- `PUT /users/me/lists/{listId}/items/{itemId}` - Update an item
   - **Headers:** `Authorization: Bearer <token>`
   - **Request Body:**
     ```json
@@ -299,13 +308,13 @@ All list item endpoints are under `/users/{userId}/lists/{listId}/items` and req
   - **Errors:**
     - `404 Not Found` - Item not found
 
-- `DELETE /users/{userId}/lists/{listId}/items/{itemId}` - Remove an item
+- `DELETE /users/me/lists/{listId}/items/{itemId}` - Remove an item
   - **Headers:** `Authorization: Bearer <token>`
   - **Response:** `204 No Content`
   - **Errors:**
     - `404 Not Found` - Item not found
 
-- `PATCH /users/{userId}/lists/{listId}/items/{itemId}` - Toggle completion status
+- `PATCH /users/me/lists/{listId}/items/{itemId}` - Toggle completion status
   - **Headers:** `Authorization: Bearer <token>`
   - **Response:** `200 OK` - Returns item with toggled completion status
     - Toggles `is_completed` between `0` (incomplete) and `1` (completed)

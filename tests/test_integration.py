@@ -29,7 +29,7 @@ class TestAuthenticationIntegration:
         
         # Step 2: Use that same token to list lists (this works in production)
         lists_response = client.get(
-            f"/users/{test_user.id}/lists",
+            "/users/me/lists",
             headers=headers
         )
         assert lists_response.status_code == status.HTTP_200_OK
@@ -37,7 +37,7 @@ class TestAuthenticationIntegration:
         
         # Step 3: Use that same token to create a list (this fails in production!)
         create_response = client.post(
-            f"/users/{test_user.id}/lists",
+            "/users/me/lists",
             headers=headers,
             json={"name": "New List from Integration Test"}
         )
@@ -48,7 +48,7 @@ class TestAuthenticationIntegration:
         
         # Step 4: Verify the created list appears in the list
         lists_response2 = client.get(
-            f"/users/{test_user.id}/lists",
+            "/users/me/lists",
             headers=headers
         )
         assert lists_response2.status_code == status.HTTP_200_OK
@@ -74,7 +74,7 @@ class TestAuthenticationIntegration:
         
         # Step 2: Create an item
         create_response = client.post(
-            f"/users/{test_user.id}/lists/{test_list.id}/items",
+            f"/users/me/lists/{test_list.id}/items",
             headers=headers,
             json={"content": "Integration Test Item"}
         )
@@ -83,14 +83,14 @@ class TestAuthenticationIntegration:
         
         # Step 3: Read items
         get_response = client.get(
-            f"/users/{test_user.id}/lists/{test_list.id}/items",
+            f"/users/me/lists/{test_list.id}/items",
             headers=headers
         )
         assert get_response.status_code == status.HTTP_200_OK
         
         # Step 4: Update the item
         update_response = client.put(
-            f"/users/{test_user.id}/lists/{test_list.id}/items/{item_id}",
+            f"/users/me/lists/{test_list.id}/items/{item_id}",
             headers=headers,
             json={"content": "Updated Content", "is_completed": 1}
         )
@@ -98,14 +98,14 @@ class TestAuthenticationIntegration:
         
         # Step 5: Toggle completion
         toggle_response = client.patch(
-            f"/users/{test_user.id}/lists/{test_list.id}/items/{item_id}",
+            f"/users/me/lists/{test_list.id}/items/{item_id}",
             headers=headers
         )
         assert toggle_response.status_code == status.HTTP_200_OK
         
         # Step 6: Delete the item
         delete_response = client.delete(
-            f"/users/{test_user.id}/lists/{test_list.id}/items/{item_id}",
+            f"/users/me/lists/{test_list.id}/items/{item_id}",
             headers=headers
         )
         assert delete_response.status_code == status.HTTP_204_NO_CONTENT
@@ -128,7 +128,7 @@ class TestAuthenticationIntegration:
         
         # Step 2: Create a list
         create_response = client.post(
-            f"/users/{test_user.id}/lists",
+            "/users/me/lists",
             headers=headers,
             json={"name": "CRUD Test List", "description": "Testing CRUD"}
         )
@@ -137,7 +137,7 @@ class TestAuthenticationIntegration:
         
         # Step 3: Read the specific list
         get_response = client.get(
-            f"/users/{test_user.id}/lists/{list_id}",
+            f"/users/me/lists/{list_id}",
             headers=headers
         )
         assert get_response.status_code == status.HTTP_200_OK
@@ -145,7 +145,7 @@ class TestAuthenticationIntegration:
         
         # Step 4: Update the list
         update_response = client.put(
-            f"/users/{test_user.id}/lists/{list_id}",
+            f"/users/me/lists/{list_id}",
             headers=headers,
             json={"name": "Updated CRUD List", "description": "Updated"}
         )
@@ -154,14 +154,14 @@ class TestAuthenticationIntegration:
         
         # Step 5: Delete the list
         delete_response = client.delete(
-            f"/users/{test_user.id}/lists/{list_id}",
+            f"/users/me/lists/{list_id}",
             headers=headers
         )
         assert delete_response.status_code == status.HTTP_204_NO_CONTENT
         
         # Step 6: Verify it's deleted
         verify_response = client.get(
-            f"/users/{test_user.id}/lists/{list_id}",
+            f"/users/me/lists/{list_id}",
             headers=headers
         )
         assert verify_response.status_code == status.HTTP_404_NOT_FOUND
@@ -187,7 +187,7 @@ class TestAuthenticationEdgeCases:
         
         # Test GET request
         get_response = client.get(
-            f"/users/{test_user.id}/lists",
+            "/users/me/lists",
             headers=headers
         )
         assert get_response.status_code == status.HTTP_200_OK, \
@@ -195,7 +195,7 @@ class TestAuthenticationEdgeCases:
         
         # Test POST request (this is where production fails)
         post_response = client.post(
-            f"/users/{test_user.id}/lists",
+            "/users/me/lists",
             headers=headers,
             json={"name": "Test List for Methods"}
         )
@@ -205,7 +205,7 @@ class TestAuthenticationEdgeCases:
         
         # Test PUT request
         put_response = client.put(
-            f"/users/{test_user.id}/lists/{list_id}",
+            f"/users/me/lists/{list_id}",
             headers=headers,
             json={"name": "Updated Name"}
         )
@@ -214,7 +214,7 @@ class TestAuthenticationEdgeCases:
         
         # Test DELETE request
         delete_response = client.delete(
-            f"/users/{test_user.id}/lists/{list_id}",
+            f"/users/me/lists/{list_id}",
             headers=headers
         )
         assert delete_response.status_code == status.HTTP_204_NO_CONTENT, \
@@ -239,7 +239,7 @@ class TestAuthenticationEdgeCases:
             "Content-Type": "application/json"
         }
         response = client.post(
-            f"/users/{test_user.id}/lists",
+            "/users/me/lists",
             headers=headers_json,
             json={"name": "List with JSON content-type"}
         )
@@ -261,7 +261,7 @@ class TestAuthenticationEdgeCases:
         headers = {"Authorization": f"Bearer {token}"}
         
         response = client.post(
-            f"/users/{test_user.id}/lists",
+            "/users/me/lists",
             headers=headers,
             json={"name": "Test whitespace handling"}
         )
@@ -285,7 +285,7 @@ class TestAuthenticationEdgeCases:
         list_ids = []
         for i in range(5):
             response = client.post(
-                f"/users/{test_user.id}/lists",
+                "/users/me/lists",
                 headers=headers,
                 json={"name": f"Rapid List {i}"}
             )
@@ -295,7 +295,7 @@ class TestAuthenticationEdgeCases:
         
         # Verify all lists were created
         response = client.get(
-            f"/users/{test_user.id}/lists",
+            "/users/me/lists",
             headers=headers
         )
         assert response.status_code == status.HTTP_200_OK
@@ -323,7 +323,7 @@ class TestAuthenticationEdgeCases:
         
         # Step 2: Immediately try to create a list (this fails in production)
         create_response = client.post(
-            f"/users/{test_user.id}/lists",
+            "/users/me/lists",
             headers={"Authorization": f"Bearer {token}"},
             json={"name": "Immediate Post Test"}
         )

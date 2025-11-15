@@ -8,7 +8,7 @@ class TestGetListItems:
     def test_get_items_success(self, client, auth_headers, test_user, test_list, test_list_item):
         """Test getting all items in a list"""
         response = client.get(
-            f"/users/{test_user.id}/lists/{test_list.id}/items",
+            f"/users/me/lists/{test_list.id}/items",
             headers=auth_headers
         )
         
@@ -21,7 +21,7 @@ class TestGetListItems:
     def test_get_items_empty_list(self, client, auth_headers, test_user, test_list):
         """Test getting items from an empty list"""
         response = client.get(
-            f"/users/{test_user.id}/lists/{test_list.id}/items",
+            f"/users/me/lists/{test_list.id}/items",
             headers=auth_headers
         )
         
@@ -32,7 +32,7 @@ class TestGetListItems:
     def test_get_items_unauthorized(self, client, test_user, test_list):
         """Test getting items without authentication"""
         response = client.get(
-            f"/users/{test_user.id}/lists/{test_list.id}/items"
+            f"/users/me/lists/{test_list.id}/items"
         )
         
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -63,7 +63,7 @@ class TestCreateListItem:
     def test_create_item_success(self, client, auth_headers, test_user, test_list):
         """Test adding an item to a list"""
         response = client.post(
-            f"/users/{test_user.id}/lists/{test_list.id}/items",
+            f"/users/me/lists/{test_list.id}/items",
             headers=auth_headers,
             json={
                 "content": "New Item",
@@ -80,7 +80,7 @@ class TestCreateListItem:
     def test_create_item_default_completed(self, client, auth_headers, test_user, test_list):
         """Test creating item with default is_completed"""
         response = client.post(
-            f"/users/{test_user.id}/lists/{test_list.id}/items",
+            f"/users/me/lists/{test_list.id}/items",
             headers=auth_headers,
             json={"content": "Item without completion"}
         )
@@ -92,7 +92,7 @@ class TestCreateListItem:
     def test_create_item_unauthorized(self, client, test_user, test_list):
         """Test creating item without authentication"""
         response = client.post(
-            f"/users/{test_user.id}/lists/{test_list.id}/items",
+            f"/users/me/lists/{test_list.id}/items",
             json={"content": "New Item"}
         )
         
@@ -105,7 +105,7 @@ class TestUpdateListItem:
     def test_update_item_success(self, client, auth_headers, test_user, test_list, test_list_item):
         """Test updating an item"""
         response = client.put(
-            f"/users/{test_user.id}/lists/{test_list.id}/items/{test_list_item.id}",
+            f"/users/me/lists/{test_list.id}/items/{test_list_item.id}",
             headers=auth_headers,
             json={
                 "content": "Updated Item Content",
@@ -121,7 +121,7 @@ class TestUpdateListItem:
     def test_update_item_partial(self, client, auth_headers, test_user, test_list, test_list_item):
         """Test updating only content"""
         response = client.put(
-            f"/users/{test_user.id}/lists/{test_list.id}/items/{test_list_item.id}",
+            f"/users/me/lists/{test_list.id}/items/{test_list_item.id}",
             headers=auth_headers,
             json={"content": "Only Content Updated"}
         )
@@ -135,7 +135,7 @@ class TestUpdateListItem:
     def test_update_item_not_found(self, client, auth_headers, test_user, test_list):
         """Test updating a nonexistent item"""
         response = client.put(
-            f"/users/{test_user.id}/lists/{test_list.id}/items/99999",
+            f"/users/me/lists/{test_list.id}/items/99999",
             headers=auth_headers,
             json={"content": "Updated Content"}
         )
@@ -159,7 +159,7 @@ class TestUpdateListItem:
         db_session.refresh(item)
         
         response = client.put(
-            f"/users/{test_user.id}/lists/{list2.id}/items/{item.id}",
+            f"/users/me/lists/{list2.id}/items/{item.id}",
             headers=auth_headers,
             json={"content": "Updated"}
         )
@@ -183,7 +183,7 @@ class TestDeleteListItem:
         db_session.refresh(item_to_delete)
         
         response = client.delete(
-            f"/users/{test_user.id}/lists/{test_list.id}/items/{item_to_delete.id}",
+            f"/users/me/lists/{test_list.id}/items/{item_to_delete.id}",
             headers=auth_headers
         )
         
@@ -191,7 +191,7 @@ class TestDeleteListItem:
         
         # Verify item is deleted
         response = client.get(
-            f"/users/{test_user.id}/lists/{test_list.id}/items",
+            f"/users/me/lists/{test_list.id}/items",
             headers=auth_headers
         )
         items = response.json()
@@ -200,7 +200,7 @@ class TestDeleteListItem:
     def test_delete_item_not_found(self, client, auth_headers, test_user, test_list):
         """Test deleting a nonexistent item"""
         response = client.delete(
-            f"/users/{test_user.id}/lists/{test_list.id}/items/99999",
+            f"/users/me/lists/{test_list.id}/items/99999",
             headers=auth_headers
         )
         
@@ -216,7 +216,7 @@ class TestToggleItemCompletion:
         assert test_list_item.is_completed == 0
         
         response = client.patch(
-            f"/users/{test_user.id}/lists/{test_list.id}/items/{test_list_item.id}",
+            f"/users/me/lists/{test_list.id}/items/{test_list_item.id}",
             headers=auth_headers
         )
         
@@ -238,7 +238,7 @@ class TestToggleItemCompletion:
         db_session.refresh(completed_item)
         
         response = client.patch(
-            f"/users/{test_user.id}/lists/{test_list.id}/items/{completed_item.id}",
+            f"/users/me/lists/{test_list.id}/items/{completed_item.id}",
             headers=auth_headers
         )
         
@@ -249,7 +249,7 @@ class TestToggleItemCompletion:
     def test_toggle_completion_not_found(self, client, auth_headers, test_user, test_list):
         """Test toggling completion for nonexistent item"""
         response = client.patch(
-            f"/users/{test_user.id}/lists/{test_list.id}/items/99999",
+            f"/users/me/lists/{test_list.id}/items/99999",
             headers=auth_headers
         )
         
@@ -259,21 +259,21 @@ class TestToggleItemCompletion:
         """Test toggling completion multiple times"""
         # Toggle to completed
         response1 = client.patch(
-            f"/users/{test_user.id}/lists/{test_list.id}/items/{test_list_item.id}",
+            f"/users/me/lists/{test_list.id}/items/{test_list_item.id}",
             headers=auth_headers
         )
         assert response1.json()["is_completed"] == 1
         
         # Toggle back to incomplete
         response2 = client.patch(
-            f"/users/{test_user.id}/lists/{test_list.id}/items/{test_list_item.id}",
+            f"/users/me/lists/{test_list.id}/items/{test_list_item.id}",
             headers=auth_headers
         )
         assert response2.json()["is_completed"] == 0
         
         # Toggle to completed again
         response3 = client.patch(
-            f"/users/{test_user.id}/lists/{test_list.id}/items/{test_list_item.id}",
+            f"/users/me/lists/{test_list.id}/items/{test_list_item.id}",
             headers=auth_headers
         )
         assert response3.json()["is_completed"] == 1

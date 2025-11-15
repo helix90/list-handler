@@ -7,20 +7,14 @@ from app.models.list import List, ListItem
 from app.schemas.list import ListItemCreate, ListItemUpdate, ListItemResponse
 from app.auth import get_current_user
 
-router = APIRouter(prefix="/users/{user_id}/lists/{list_id}/items", tags=["list-items"])
+router = APIRouter(prefix="/users/me/lists/{list_id}/items", tags=["list-items"])
 
 
-def verify_list_access(current_user: User, user_id: int, list_id: int, db: Session):
-    """Verify that the current user can access the requested list"""
-    if current_user.id != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions to access this resource"
-        )
-    
+def verify_list_access(current_user: User, list_id: int, db: Session):
+    """Verify that the current user owns the requested list"""
     db_list = db.query(List).filter(
         List.id == list_id,
-        List.user_id == user_id
+        List.user_id == current_user.id
     ).first()
     
     if not db_list:
@@ -39,12 +33,10 @@ def verify_list_access(current_user: User, user_id: int, list_id: int, db: Sessi
     responses={
         200: {"description": "Array of list items"},
         401: {"description": "Missing or invalid authentication token"},
-        403: {"description": "User cannot access another user's lists"},
         404: {"description": "List not found"}
     }
 )
 async def get_list_items(
-    user_id: int,
     list_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -52,11 +44,10 @@ async def get_list_items(
     """
     Retrieve all items in a specific list.
     
-    - **user_id**: ID of the user who owns the list
     - **list_id**: ID of the list
-    - Returns an array of all items in the list
+    - Returns an array of all items in the list owned by current user
     """
-    verify_list_access(current_user, user_id, list_id, db)
+    verify_list_access(current_user, list_id, db)
     
     items = db.query(ListItem).filter(ListItem.list_id == list_id).all()
     return items
@@ -70,26 +61,23 @@ async def get_list_items(
     responses={
         201: {"description": "Item successfully created"},
         401: {"description": "Missing or invalid authentication token"},
-        403: {"description": "User cannot add items to another user's lists"},
         404: {"description": "List not found"}
     }
 )
 async def create_list_item(
-    user_id: int,
     list_id: int,
     item_data: ListItemCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Add a new item to a list.
+    Add a new item to a list owned by current user.
     
-    - **user_id**: ID of the user who owns the list
     - **list_id**: ID of the list to add the item to
     - **content**: Text content of the item (required)
     - **is_completed**: Completion status, defaults to 0 (not completed)
     """
-    verify_list_access(current_user, user_id, list_id, db)
+    verify_list_access(current_user, list_id, db)
     
     db_item = ListItem(
         list_id=list_id,
@@ -110,12 +98,10 @@ async def create_list_item(
     responses={
         200: {"description": "Item successfully updated"},
         401: {"description": "Missing or invalid authentication token"},
-        403: {"description": "User cannot update items in another user's lists"},
         404: {"description": "Item not found"}
     }
 )
 async def update_list_item(
-    user_id: int,
     list_id: int,
     item_id: int,
     item_data: ListItemUpdate,
@@ -125,14 +111,14 @@ async def update_list_item(
     """
     Update an item's content and/or completion status.
     
-    - **user_id**: ID of the user who owns the list
     - **list_id**: ID of the list containing the item
     - **item_id**: ID of the item to update
     - **content**: New content for the item (optional)
     - **is_completed**: New completion status (optional: 0 = not completed, 1 = completed)
     - Only provided fields will be updated
+    - Only updates items in lists owned by current user
     """
-    verify_list_access(current_user, user_id, list_id, db)
+    verify_list_access(current_user, list_id, db)
     
     db_item = db.query(ListItem).filter(
         ListItem.id == item_id,
@@ -164,12 +150,10 @@ async def update_list_item(
     responses={
         204: {"description": "Item successfully deleted"},
         401: {"description": "Missing or invalid authentication token"},
-        403: {"description": "User cannot delete items from another user's lists"},
         404: {"description": "Item not found"}
     }
 )
 async def delete_list_item(
-    user_id: int,
     list_id: int,
     item_id: int,
     current_user: User = Depends(get_current_user),
@@ -178,11 +162,11 @@ async def delete_list_item(
     """
     Delete an item from a list.
     
-    - **user_id**: ID of the user who owns the list
     - **list_id**: ID of the list containing the item
     - **item_id**: ID of the item to delete
+    - Only deletes items from lists owned by current user
     """
-    verify_list_access(current_user, user_id, list_id, db)
+    verify_list_access(current_user, list_id, db)
     
     db_item = db.query(ListItem).filter(
         ListItem.id == item_id,
@@ -208,12 +192,10 @@ async def delete_list_item(
     responses={
         200: {"description": "Item completion status toggled"},
         401: {"description": "Missing or invalid authentication token"},
-        403: {"description": "User cannot modify items in another user's lists"},
         404: {"description": "Item not found"}
     }
 )
 async def toggle_item_completion(
-    user_id: int,
     list_id: int,
     item_id: int,
     current_user: User = Depends(get_current_user),
@@ -222,13 +204,13 @@ async def toggle_item_completion(
     """
     Toggle the completion status of an item.
     
-    - **user_id**: ID of the user who owns the list
     - **list_id**: ID of the list containing the item
     - **item_id**: ID of the item to toggle
     - Toggles `is_completed` between 0 (incomplete) and 1 (completed)
     - No request body required
+    - Only toggles items in lists owned by current user
     """
-    verify_list_access(current_user, user_id, list_id, db)
+    verify_list_access(current_user, list_id, db)
     
     db_item = db.query(ListItem).filter(
         ListItem.id == item_id,
