@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from typing import List as TypingList
 from app.database import get_db
@@ -51,6 +51,46 @@ async def get_list_items(
     
     items = db.query(ListItem).filter(ListItem.list_id == db_list.id).all()
     return items
+
+
+@router.get(
+    "/search",
+    response_model=TypingList[ListItemResponse],
+    summary="Find items in a list by their text",
+    responses={
+        200: {"description": "Matching items, best match first (empty when none match)"},
+        401: {"description": "Missing or invalid authentication token"},
+        404: {"description": "List not found"}
+    }
+)
+async def search_list_items(
+    list_name: str,
+    q: str = Query(..., min_length=1, max_length=500, description="Text to look for in the items"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Find the items of a list whose text matches `q`, ignoring case and
+    surrounding spaces, so that an item can be changed by its name.
+
+    - Items whose text is `q` come first, then those that start with it,
+      then those that contain it; each group in the order they were added
+    - Returns an empty array when nothing matches
+    """
+    db_list = verify_list_access(current_user, list_name, db)
+    query = " ".join(q.split()).casefold()
+
+    exact, prefix, contains = [], [], []
+    items = db.query(ListItem).filter(ListItem.list_id == db_list.id).order_by(ListItem.id).all()
+    for item in items:
+        text = " ".join(item.content.split()).casefold()
+        if text == query:
+            exact.append(item)
+        elif text.startswith(query):
+            prefix.append(item)
+        elif query in text:
+            contains.append(item)
+    return exact + prefix + contains
 
 
 @router.post(

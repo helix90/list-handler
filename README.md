@@ -303,6 +303,14 @@ All list endpoints are under `/users/me/` and require authentication. The `/me` 
 
 All list item endpoints are under `/users/me/lists/{listName}/items` and require authentication:
 
+- `GET /users/me/lists/{listName}/items/search?q=milk` - Find items by their text
+  - **Headers:** `Authorization: Bearer <token>`
+  - Ignores case and extra spaces. Returns the matching items, best first:
+    items whose text is `q`, then those starting with it, then those
+    containing it. An empty array when nothing matches. The bot uses it to
+    tick off or remove an item by name.
+  - **Error Responses:** `404 Not Found` - List not found
+
 - `GET /users/me/lists/{listName}/items` - Get all items in a list
   - **Headers:** `Authorization: Bearer <token>`
   - **Response:** `200 OK`
