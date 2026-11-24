@@ -25,6 +25,7 @@ router = APIRouter(prefix="/auth", tags=["authentication"])
     responses={
         201: {"description": "User successfully registered"},
         400: {"description": "Username or email already registered"},
+        403: {"description": "Registration is closed (ALLOW_REGISTRATION is off)"},
         422: {"description": "Validation error"}
     }
 )
@@ -35,7 +36,15 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
     - **username**: Must be unique
     - **email**: Must be a valid email address and unique
     - **password**: User's password (will be hashed)
+
+    Only available when ALLOW_REGISTRATION is on; otherwise accounts are
+    created with `python -m app.manage create-user`.
     """
+    if not settings.allow_registration:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Registration is closed. Ask the administrator for an account."
+        )
     # Check if username already exists
     db_user = db.query(User).filter(User.username == user_data.username).first()
     if db_user:

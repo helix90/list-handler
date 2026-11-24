@@ -1,3 +1,8 @@
+import os
+
+# Settings are read when the app is imported, so the tests' key is set first
+os.environ.setdefault("SECRET_KEY", "test-secret-key-that-is-long-enough-for-hs256")
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -49,6 +54,13 @@ def client(db_session):
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def open_registration(monkeypatch):
+    """Turn ALLOW_REGISTRATION on for one test"""
+    from app.config import settings
+    monkeypatch.setattr(settings, "allow_registration", True)
 
 
 @pytest.fixture

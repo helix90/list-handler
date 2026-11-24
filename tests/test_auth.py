@@ -2,6 +2,7 @@ import pytest
 from fastapi import status
 
 
+@pytest.mark.usefixtures("open_registration")
 class TestAuthRegister:
     """Tests for POST /auth/register"""
     
@@ -62,7 +63,7 @@ class TestAuthRegister:
             }
         )
         
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 class TestAuthLogin:

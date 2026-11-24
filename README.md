@@ -15,12 +15,53 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+## Configuration
+
+| Variable | Default | |
+| --- | --- | --- |
+| `SECRET_KEY` | none, **required** | Signs the access tokens. At least 32 characters; the server won't start without one, or with the old placeholder. Generate one with `python -c "import secrets; print(secrets.token_urlsafe(48))"` |
+| `ALLOW_REGISTRATION` | `false` | Lets anyone who can reach the API create an account with `POST /auth/register`. Leave it off and create accounts with the `manage` command below |
+| `CORS_ORIGINS` | empty | Browser origins allowed to call the API, comma-separated. Servers (such as the bot) need none |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | `30` | How long a login lasts |
+| `DATABASE_URL` | `sqlite:///./data/list_handler.db` | |
+| `LIST_HANDLER_BIND` | `0.0.0.0` | Docker Compose only: the address the port is published on. Use `127.0.0.1` if only this machine needs the API |
+
+Put them in a `.env` file next to `docker-compose.yml` (Compose reads it) or
+in the environment.
+
+### Accounts
+
+Registration is closed by default. Create and manage accounts with:
+
+```bash
+python -m app.manage create-user alice alice@example.com   # asks for the password
+python -m app.manage set-password alice
+python -m app.manage deactivate-user alice                 # and activate-user
+python -m app.manage list-users
+```
+
+In Docker, run them in the container:
+
+```bash
+docker compose exec web python -m app.manage create-user alice alice@example.com
+```
+
+### Upgrading from 0.3
+
+- Set `SECRET_KEY` before starting; earlier versions fell back to a published
+  placeholder, which let anyone sign a token for any user. Users log in again
+  once after the change (the bot does this by itself with saved credentials).
+- Existing passwords keep working.
+- `POST /auth/register` returns 403 unless `ALLOW_REGISTRATION=true`.
+- The API no longer sends CORS headers unless `CORS_ORIGINS` is set.
+
 ## Running the Application
 
 ### Local Development
 
 Start the development server:
 ```bash
+export SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
 uvicorn main:app --reload --port 8088
 ```
 
@@ -33,8 +74,9 @@ The API will be available at:
 
 #### Using Docker Compose (Recommended)
 
-1. Build and start the container:
+1. Set a secret key, then build and start the container:
 ```bash
+echo "SECRET_KEY=$(python -c 'import secrets; print(secrets.token_urlsafe(48))')" >> .env
 docker-compose up -d
 ```
 
@@ -61,7 +103,7 @@ docker run -d \
   --name list-handler-api \
   -p 8088:8088 \
   -v $(pwd)/data:/app/data \
-  -e SECRET_KEY=your-secret-key-here \
+  -e SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')" \
   list-handler-api
 ```
 
@@ -118,7 +160,7 @@ Example: After logging in, you access your lists at `/users/me/lists` instead of
 
 All authentication endpoints are under `/auth`:
 
-- `POST /auth/register` - Register a new user
+- `POST /auth/register` - Register a new user (only with `ALLOW_REGISTRATION=true`; otherwise `403 Forbidden`)
   - **Request Body:**
     ```json
     {
@@ -343,7 +385,7 @@ Authorization: Bearer <your_access_token>
 ```
 
 To get an access token:
-1. Register a new user: `POST /auth/register`
+1. Get an account: `python -m app.manage create-user` (or `POST /auth/register` when registration is open)
 2. Login: `POST /auth/login` (returns access token)
 3. Use the token in subsequent requests
 

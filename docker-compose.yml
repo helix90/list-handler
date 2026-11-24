@@ -3,13 +3,23 @@ services:
     build: .
     container_name: list-handler-api
     ports:
-      - "8088:8088"
+      # Reachable from other machines by default, so the bot can reach it.
+      # If the bot runs on this machine (not in Docker), set
+      # LIST_HANDLER_BIND=127.0.0.1 to keep the API off the network.
+      - "${LIST_HANDLER_BIND:-0.0.0.0}:8088:8088"
     volumes:
       - ./data:/app/data
       - ./alembic:/app/alembic
     environment:
       - DATABASE_URL=sqlite:///./data/list_handler.db
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-this-in-production}
+      # Required: signs the access tokens. Generate one with
+      #   python -c "import secrets; print(secrets.token_urlsafe(48))"
+      - SECRET_KEY=${SECRET_KEY:?Set SECRET_KEY in .env (see README)}
+      # Off by default: create accounts with
+      #   docker compose exec web python -m app.manage create-user NAME EMAIL
+      - ALLOW_REGISTRATION=${ALLOW_REGISTRATION:-false}
+      # Browser origins allowed to call the API (comma-separated); none by default
+      - CORS_ORIGINS=${CORS_ORIGINS:-}
       - ALGORITHM=HS256
       - ACCESS_TOKEN_EXPIRE_MINUTES=30
     restart: unless-stopped

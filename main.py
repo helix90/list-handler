@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.config import settings
 from app.database import engine, Base
 from app.routers import auth, lists, items
 import subprocess
@@ -20,19 +21,22 @@ except FileNotFoundError:
 app = FastAPI(
     title="List Handler API",
     description="A FastAPI application for handling multiple lists with authentication. Users can create lists and manage list items with completion tracking.",
-    version="0.3.0",
+    version="0.4.0",
     docs_url="/docs",
     redoc_url="/redoc"
 )
 
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# CORS only for the browser origins CORS_ORIGINS names; servers such as the
+# bot need none. Tokens travel in the Authorization header, not cookies, so
+# credentials are not allowed across origins.
+if settings.cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["Authorization", "Content-Type"],
+    )
 
 # Include routers
 app.include_router(auth.router)
