@@ -211,6 +211,13 @@ All authentication endpoints are under `/auth`:
 
 All list endpoints are under `/users/me/` and require authentication. The `/me` placeholder automatically refers to the currently authenticated user:
 
+**List names in paths** (`{listName}` in this and the item endpoints) are
+matched the way people type them: exactly first, then ignoring case, then
+loosely, ignoring a leading "my", "the" or "our", a trailing "list" and
+plurals. So `GET /users/me/lists/Grocery` and `/users/me/lists/my%20groceries%20list`
+both find a list called "groceries". If two lists match equally, the older one
+wins; an exact name always wins.
+
 - `GET /users/me/lists` - Get all lists for a user
   - **Headers:** `Authorization: Bearer <token>`
   - **Response:** `200 OK`

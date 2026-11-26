@@ -11,6 +11,7 @@ from app.schemas.list import (
     ListWithItemsResponse,
 )
 from app.auth import get_current_user
+from app.lookup import find_user_list
 
 router = APIRouter(prefix="/users/me/lists", tags=["lists"])
 
@@ -92,10 +93,7 @@ async def get_list(
     - Returns the list object with an array of all items
     - Only returns lists owned by the current authenticated user
     """
-    db_list = db.query(List).filter(
-        List.name == list_name,
-        List.user_id == current_user.id
-    ).first()
+    db_list = find_user_list(db, current_user, list_name)
     
     if not db_list:
         raise HTTPException(
@@ -131,10 +129,7 @@ async def update_list(
     - Only provided fields will be updated
     - Only updates lists owned by the current authenticated user
     """
-    db_list = db.query(List).filter(
-        List.name == list_name,
-        List.user_id == current_user.id
-    ).first()
+    db_list = find_user_list(db, current_user, list_name)
     
     if not db_list:
         raise HTTPException(
@@ -176,10 +171,7 @@ async def delete_list(
     - **Warning**: This will also delete all items in the list (cascade delete)
     - Only deletes lists owned by the current authenticated user
     """
-    db_list = db.query(List).filter(
-        List.name == list_name,
-        List.user_id == current_user.id
-    ).first()
+    db_list = find_user_list(db, current_user, list_name)
     
     if not db_list:
         raise HTTPException(

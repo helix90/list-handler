@@ -6,16 +6,14 @@ from app.models.user import User
 from app.models.list import List, ListItem
 from app.schemas.list import ListItemCreate, ListItemUpdate, ListItemResponse
 from app.auth import get_current_user
+from app.lookup import find_user_list
 
 router = APIRouter(prefix="/users/me/lists/{list_name}/items", tags=["list-items"])
 
 
 def verify_list_access(current_user: User, list_name: str, db: Session):
     """Verify that the current user owns the requested list"""
-    db_list = db.query(List).filter(
-        List.name == list_name,
-        List.user_id == current_user.id
-    ).first()
+    db_list = find_user_list(db, current_user, list_name)
     
     if not db_list:
         raise HTTPException(
